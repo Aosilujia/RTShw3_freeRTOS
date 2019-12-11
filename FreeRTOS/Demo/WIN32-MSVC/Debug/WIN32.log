@@ -1,0 +1,3 @@
+﻿cl : 命令行 warning D9002: 忽略未知选项“/wc4574”
+  main_blinky.c
+  WIN32.vcxproj -> D:\TDDOWNLOAD\FreeRTOSv10.2.1_191129\FreeRTOS\Demo\WIN32-MSVC\.\Debug\RTOSDemo.exe
