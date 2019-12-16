@@ -64,6 +64,13 @@
 #define configUSE_TASK_NOTIFICATIONS			1
 #define configSUPPORT_STATIC_ALLOCATION			1
 
+/*sjtuse-jinxueyi
+ *Config for RTS homework2, set EDF scheduler & other schedulers
+ */
+/* use EDF scheduler in program*/
+#define configUSE_EDF_SCHEDULER					1
+
+
 /* Software timer related configuration options. */
 #define configUSE_TIMERS						1
 #define configTIMER_TASK_PRIORITY				( configMAX_PRIORITIES - 1 )

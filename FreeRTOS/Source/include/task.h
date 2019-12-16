@@ -335,6 +335,21 @@ is used in assert() statements. */
 							TaskHandle_t * const pxCreatedTask ) PRIVILEGED_FUNCTION;
 #endif
 
+/*EDF xTaskPeriodicCreate
+ *used for creating a task with deadline
+*/
+#if( configUSE_EDF_SCHEDULER==1)
+	BaseType_t xTaskPeriodicCreate(TaskFunction_t pxTaskCode,
+		const char * const pcName,	/*lint !e971 Unqualified char types are allowed for strings and single characters only. */
+		const configSTACK_DEPTH_TYPE usStackDepth,
+		void * const pvParameters,
+		UBaseType_t uxPriority,
+		TaskHandle_t * const pxCreatedTask,
+		/*modified for EDF*/
+		TickType_t period) PRIVILEGED_FUNCTION;
+#endif
+
+
 /**
  * task. h
  *<pre>
