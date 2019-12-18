@@ -106,9 +106,11 @@ extern unsigned long ulTaskNumber[];
 extern uint32_t ulTaskBeginTime[];
 extern uint32_t ulTaskRunTime[];
 extern char ulTaskname[];
+extern uint32_t ulTaskDDL;
 extern uint32_t ulTaskRunTimeLast;
 #define traceTASK_SWITCHED_IN_PRINT( )	ulTaskNumber[ pxCurrentTCB->uxTCBNumber ] =1;  \
 										ulTaskBeginTime[ pxCurrentTCB->uxTCBNumber ]= ulTaskSwitchedInTime; \
+										ulTaskDDL=pxCurrentTCB->ulAbsDeadline;\
 										strcpy(ulTaskname,pxCurrentTCB->pcTaskName)
 #define traceTASK_SWITCHED_OUT_PRINT( )	ulTaskNumber[ pxCurrentTCB->uxTCBNumber ] =0;  \
 										ulTaskRunTime[ pxCurrentTCB->uxTCBNumber ]=pxCurrentTCB->ulRunTimeCounter;\

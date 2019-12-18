@@ -127,6 +127,10 @@ static void TaskA( void *pvParameters );
 static void TaskB( void *pvParameters );
 static void TaskC(void *pvParameters);
 
+static void T1(void *);
+static void T2(void *);
+static void T3(void *);
+static void T4(void *);
 /*
  * The callback function executed when the software timer expires.
  */
@@ -144,13 +148,13 @@ static TimerHandle_t xTimer = NULL;
 
 /*EDF parameters*/
 /*deadlines*/
-#define A_DDL 10
-#define B_DDL 10
-#define C_DDL 1000
+#define A_DDL 50
+#define B_DDL 20
+#define C_DDL 10
 
 /* arriving periods */
 #define mainTASK_A_FREQUENCY_MS			pdMS_TO_TICKS( 500UL )
-#define mainTASK_B_FREQUENCY_MS			pdMS_TO_TICKS( 5000UL )
+#define mainTASK_B_FREQUENCY_MS			pdMS_TO_TICKS( 1000UL )
 #define mainTASK_C_FREQUENCY_MS			pdMS_TO_TICKS( 500UL )
 
 
@@ -217,7 +221,7 @@ static void TaskA(void *pvParameters) {
 		While in the Blocked state this task will not consume any CPU time. */
 		vTaskDelayUntil(&xNextWakeTime, xBlockTime);
 
-		
+		/*test workload*/
 		for (int i = 0;i < 99999;i += 1) {
 			workload += 1.0;
 			workload /= i;
@@ -267,7 +271,7 @@ static void TaskB(void *pvParameters) {
 
 static void TaskC(void *pvParameters) {
 	TickType_t xNextWakeTime;
-	const TickType_t xBlockTime = mainTASK_A_FREQUENCY_MS;
+	const TickType_t xBlockTime = mainTASK_C_FREQUENCY_MS;
 
 	/* Prevent the compiler warning about the unused parameter. */
 	(void)pvParameters;
@@ -275,9 +279,7 @@ static void TaskC(void *pvParameters) {
 	/* Initialise xNextWakeTime - this only needs to be done once. */
 	xNextWakeTime = xTaskGetTickCount();
 
-	/* first time*/
-	vTaskDelayUntil(&xNextWakeTime, 1000);
-
+	double workload = 3.0;
 
 	for (;; )
 	{
@@ -288,6 +290,16 @@ static void TaskC(void *pvParameters) {
 		vTaskDelayUntil(&xNextWakeTime, xBlockTime);
 
 		/*working block*/
+		for (int i = 0;i < 99999;i += 1) {
+			workload += 1.0;
+			workload /= i;
+			workload += 2.0;
+			workload /= i;
+			workload += 3.0;
+			workload /= i;
+		}
+
+
 		//printf("current task status:%ld,%ld\r\n", ulTaskNumber[1], ulTaskNumber[2]);
 		//printf("running ticktimes:%u,%u,%u,%u\r\n", ulTaskRunTime[0], ulTaskRunTime[1], ulTaskRunTime[2], ulTaskRunTime[3]);
 		printf("current running task:%6s\r\n", ulTaskname);
@@ -299,4 +311,53 @@ static void TaskC(void *pvParameters) {
 
 /*-----------------------------------------------------------*/
 
+static void T1(void *pvParameters)
+{
+	unsigned int i = 0;
+	while (1)
+	{
+		//i = 0xFFFFFFFE + 0xA;
+		//printf("%x\n", i);
+		printf("T1 Executing\n");
+		printf("current task ddl:%u\r\n", ulTaskDDL);
+		for (i = 0;i < 9000; i++);
+		vTaskDelay(10 / portTICK_RATE_MS);
+	}
+}
 
+
+static void T2(void *pvParameters)
+{
+	unsigned long i = 0;
+	while (1)
+	{
+		printf("T2 executing\n");
+		printf("current task ddl:%u\r\n", ulTaskDDL);
+		for (i = 0;i < 9000; i++);
+		vTaskDelay(20 / portTICK_RATE_MS);
+	}
+}
+
+static void T3(void *pvParameters)
+{
+	int i = 0;
+	while (1)
+	{
+		printf("T3 Executing\n");
+		printf("current task ddl:%u\r\n", ulTaskDDL);
+		for (i = 0;i < 9000; i++);
+		vTaskDelay(30 / portTICK_RATE_MS);
+	}
+}
+
+
+static void T4(void *pvParameters)
+{
+	unsigned long i = 0;
+	while (1)
+	{
+		printf("T4 executing\n");
+		for (i = 0;i < 9000; i++);
+		vTaskDelay(40 / portTICK_RATE_MS);
+	}
+}
