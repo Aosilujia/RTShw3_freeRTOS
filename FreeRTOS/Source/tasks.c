@@ -215,24 +215,30 @@ count overflows. */
  * Place the task represented by pxTCB into the appropriate ready list for
  * the task.  It is inserted at the end of the list.
  */
+#if (configUSE_EDF_SCHEDULER == 0)
 #define prvAddTaskToReadyList( pxTCB )																\
 	traceMOVED_TASK_TO_READY_STATE( pxTCB );														\
 	taskRECORD_READY_PRIORITY( ( pxTCB )->uxPriority );												\
 	vListInsertEnd( &( pxReadyTasksLists[ ( pxTCB )->uxPriority ] ), &( ( pxTCB )->xStateListItem ) ); \
 	tracePOST_MOVED_TASK_TO_READY_STATE( pxTCB )
 
-#if configUSE_EDF_SCHEDULER == 1
+#else
  /*
  *EDF modification
  *vListInsert() 
-
  */
-	#define prvAddTaskToEDFReadyList( pxTCB )																					\
+ /*
+ modify deadline, called before vListInsert
+ */
+
+	#define prvAddTaskToReadyList( pxTCB )																\
 		traceMOVED_TASK_TO_READY_STATE( pxTCB );														\
 		taskRECORD_READY_PRIORITY( ( pxTCB )->uxPriority );												\
-		vListInsert( &( xReadyTaskListEDF), &( ( pxTCB )->xStateListItem ) ); \
+		task_ADD_DEADLINE(pxTCB);																		\
+		vListInsert( &( pxReadyTasksLists[ ( pxTCB )->uxPriority ] ), &( ( pxTCB )->xStateListItem ) ); \
 		tracePOST_MOVED_TASK_TO_READY_STATE( pxTCB )
 #endif
+
 
 /*-----------------------------------------------------------*/
 
@@ -277,12 +283,6 @@ typedef struct tskTaskControlBlock 			/* The old naming convention is used to pr
 	StackType_t			*pxStack;			/*< Points to the start of the stack. */
 	char				pcTaskName[ configMAX_TASK_NAME_LEN ];/*< Descriptive name given to the task when created.  Facilitates debugging only. */ /*lint !e971 Unqualified char types are allowed for strings and single characters only. */
 
-	/*EDF
-	 *adding deadline 
-	 */
-	#if (configUSE_EDF_SCHEDULER == 1)
-		TickType_t xTaskPeriod;
-	#endif
 
 	#if ( ( portSTACK_GROWTH > 0 ) || ( configRECORD_STACK_HIGH_ADDRESS == 1 ) )
 		StackType_t		*pxEndOfStack;		/*< Points to the highest valid address for the stack. */
@@ -344,6 +344,14 @@ typedef struct tskTaskControlBlock 			/* The old naming convention is used to pr
 		int iTaskErrno;
 	#endif
 
+	/*EDF
+	*adding deadline
+	*/
+	#if (configUSE_EDF_SCHEDULER == 1)
+		TickType_t ulDeadline;
+		TickType_t ulAbsDeadline;
+	#endif
+
 } tskTCB;
 
 /* The old tskTCB name is maintained above then typedefed to the new TCB_t name
@@ -365,12 +373,7 @@ PRIVILEGED_DATA static List_t * volatile pxDelayedTaskList;				/*< Points to the
 PRIVILEGED_DATA static List_t * volatile pxOverflowDelayedTaskList;		/*< Points to the delayed task list currently being used to hold tasks that have overflowed the current tick count. */
 PRIVILEGED_DATA static List_t xPendingReadyList;						/*< Tasks that have been readied while the scheduler was suspended.  They will be moved to the ready list when the scheduler is resumed. */
 
-/*
-  EDF readylist
-*/
-#if ( configUSE_EDF_SCHEDULER==1)
-	PRIVILEGED_DATA static List_t xReadyTaskListEDF; 
-#endif
+
 
 
 #if( INCLUDE_vTaskDelete == 1 )
@@ -420,6 +423,7 @@ PRIVILEGED_DATA static volatile UBaseType_t uxSchedulerSuspended	= ( UBaseType_t
 	code working with debuggers that need to remove the static qualifier. */
 	PRIVILEGED_DATA static uint32_t ulTaskSwitchedInTime = 0UL;	/*< Holds the value of a timer/counter the last time a task was switched in. */
 	PRIVILEGED_DATA static uint32_t ulTotalRunTime = 0UL;		/*< Holds the total amount of execution time as defined by the run time counter clock. */
+
 
 #endif
 
@@ -847,18 +851,19 @@ static void prvAddNewTaskToReadyList( TCB_t *pxNewTCB ) PRIVILEGED_FUNCTION;
 #endif /* configSUPPORT_DYNAMIC_ALLOCATION */
 /*-----------------------------------------------------------*/
 
-/*EDF xTaskPeriodicCreate implementation
+/*EDF xTaskDeadlineCreate implementation
 *used for creating a task with deadline
 */
+
 #if( configUSE_EDF_SCHEDULER==1)
-	BaseType_t xTaskPeriodicCreate(TaskFunction_t pxTaskCode,
+	BaseType_t xTaskDeadlineCreate(TaskFunction_t pxTaskCode,
 		const char * const pcName,	/*lint !e971 Unqualified char types are allowed for strings and single characters only. */
 		const configSTACK_DEPTH_TYPE usStackDepth,
 		void * const pvParameters,
 		UBaseType_t uxPriority,
 		TaskHandle_t * const pxCreatedTask,
 		/*modified for EDF*/
-		TickType_t period)
+		TickType_t deadline)
 	{
 		TCB_t *pxNewTCB;
 		BaseType_t xReturn;
@@ -930,6 +935,12 @@ static void prvAddNewTaskToReadyList( TCB_t *pxNewTCB ) PRIVILEGED_FUNCTION;
 			#endif /* tskSTATIC_AND_DYNAMIC_ALLOCATION_POSSIBLE */
 
 			prvInitialiseNewTask(pxTaskCode, pcName, (uint32_t)usStackDepth, pvParameters, uxPriority, pxCreatedTask, pxNewTCB, NULL);
+			
+			/*EDF modification
+			 set task deadline to the parameter
+			*/
+			pxNewTCB->ulDeadline = deadline;
+			/**/
 			prvAddNewTaskToReadyList(pxNewTCB);
 			xReturn = pdPASS;
 		}
@@ -1851,6 +1862,7 @@ static void prvAddNewTaskToReadyList( TCB_t *pxNewTCB )
 				mtCOVERAGE_TEST_MARKER();
 			}
 
+
 			vListInsertEnd( &xSuspendedTaskList, &( pxTCB->xStateListItem ) );
 
 			#if( configUSE_TASK_NOTIFICATIONS == 1 )
@@ -2123,12 +2135,13 @@ BaseType_t xReturn;
 	#else
 	{
 		/* The Idle task is being created using dynamically allocated RAM. */
-		xReturn = xTaskCreate(	prvIdleTask,
+		xReturn = xTaskDeadlineCreate(	prvIdleTask,
 								configIDLE_TASK_NAME,
 								configMINIMAL_STACK_SIZE,
 								( void * ) NULL,
 								portPRIVILEGE_BIT, /* In effect ( tskIDLE_PRIORITY | portPRIVILEGE_BIT ), but tskIDLE_PRIORITY is zero. */
-								&xIdleTaskHandle ); /*lint !e961 MISRA exception, justified as it is not a redundant explicit cast to all supported compilers. */
+								&xIdleTaskHandle,
+								100000 ); /*lint !e961 MISRA exception, justified as it is not a redundant explicit cast to all supported compilers. */
 	}
 	#endif /* configSUPPORT_STATIC_ALLOCATION */
 
@@ -2184,6 +2197,7 @@ BaseType_t xReturn;
 		portCONFIGURE_TIMER_FOR_RUN_TIME_STATS();
 
 		traceTASK_SWITCHED_IN();
+		traceTASK_SWITCHED_IN_PRINT();
 
 		/* Setting up the timer tick is hardware specific and thus in the
 		portable interface. */
@@ -3109,6 +3123,9 @@ void vTaskSwitchContext( void )
 		}
 		#endif /* configGENERATE_RUN_TIME_STATS */
 
+		/*EDF print*/
+		traceTASK_SWITCHED_OUT_PRINT();
+
 		/* Check for stack overflow, if configured. */
 		taskCHECK_FOR_STACK_OVERFLOW();
 
@@ -3123,6 +3140,7 @@ void vTaskSwitchContext( void )
 		optimised asm code. */
 		taskSELECT_HIGHEST_PRIORITY_TASK(); /*lint !e9079 void * is used as this macro is used with timers and co-routines too.  Alignment is known to be fine as the type of the pointer stored and retrieved is the same. */
 		traceTASK_SWITCHED_IN();
+		traceTASK_SWITCHED_IN_PRINT();
 
 		/* After the new task is switched in, update the global errno. */
 		#if( configUSE_POSIX_ERRNO == 1 )
@@ -3681,12 +3699,6 @@ UBaseType_t uxPriority;
 	vListInitialise( &xDelayedTaskList2 );
 	vListInitialise( &xPendingReadyList );
 
-	/* EDF tasklist initialize*/
-	#if ( configUSE_EDF_SCHEDULER==1)
-	{
-		vListInitialise(&xReadyTaskListEDF);
-	}
-	#endif
 
 	#if ( INCLUDE_vTaskDelete == 1 )
 	{
@@ -3841,6 +3853,7 @@ static void prvCheckTasksWaitingTermination( void )
 
 		if( listCURRENT_LIST_LENGTH( pxList ) > ( UBaseType_t ) 0 )
 		{
+
 			listGET_OWNER_OF_NEXT_ENTRY( pxFirstTCB, pxList ); /*lint !e9079 void * is used as this macro is used with timers and co-routines too.  Alignment is known to be fine as the type of the pointer stored and retrieved is the same. */
 
 			/* Populate an TaskStatus_t structure within the
@@ -5344,3 +5357,16 @@ when performing module tests). */
 #endif
 
 
+/*
+	EDF new deadline
+*/
+#if (configUSE_EDF_SCHEDULER == 1)
+	unsigned long task_ADD_DEADLINE(void* tempTCB)
+	{
+		TCB_t *pxTCB;
+		pxTCB = (TCB_t *)tempTCB;
+		pxTCB->ulAbsDeadline = pxTCB->ulDeadline +xTaskGetTickCount();
+		(&(pxTCB)->xStateListItem)->xItemValue = pxTCB->ulAbsDeadline;
+		return pxTCB->ulAbsDeadline;
+	}
+#endif

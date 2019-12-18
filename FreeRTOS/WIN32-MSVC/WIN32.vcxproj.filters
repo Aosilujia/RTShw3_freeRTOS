@@ -159,6 +159,9 @@
     <ClCompile Include="..\..\FreeRTOS-Plus\Source\FreeRTOS-Plus-Trace\trcSnapshotRecorder.c">
       <Filter>Demo App Source\FreeRTOS+Trace Recorder</Filter>
     </ClCompile>
+    <ClCompile Include="main_RTOShw2.c">
+      <Filter>Demo App Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FreeRTOSConfig.h">
@@ -221,5 +224,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Trace.dump">
+      <Filter>Demo App Source</Filter>
+    </None>
   </ItemGroup>
 </Project>

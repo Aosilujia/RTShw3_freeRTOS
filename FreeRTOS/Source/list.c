@@ -103,6 +103,7 @@ ListItem_t * const pxIndex = pxList->pxIndex;
 void vListInsert( List_t * const pxList, ListItem_t * const pxNewListItem )
 {
 ListItem_t *pxIterator;
+
 const TickType_t xValueOfInsertion = pxNewListItem->xItemValue;
 
 	/* Only effective when configASSERT() is also defined, these tests may catch

@@ -132,6 +132,19 @@ static TimerHandle_t xTimer = NULL;
 
 /*-----------------------------------------------------------*/
 
+/*EDF parameters*/
+#define A_PERIOD 50
+#define B_PERIOD 80
+
+/*EDF datastruct for current state 
+ *!!!!!warning!!!!!
+ *must be declared
+*/
+unsigned long ulTaskNumber[configEXPECTED_EDF_TASKS];
+uint32_t ulTaskBeginTime[configEXPECTED_EDF_TASKS];
+uint32_t ulTaskRunTime[configEXPECTED_EDF_TASKS];
+
+
 /*** SEE THE COMMENTS AT THE TOP OF THIS FILE ***/
 void main_blinky( void )
 {
@@ -144,14 +157,15 @@ const TickType_t xTimerPeriod = mainTIMER_SEND_FREQUENCY_MS;
 	{
 		/* Start the two tasks as described in the comments at the top of this
 		file. */
-		xTaskCreate( prvQueueReceiveTask,			/* The function that implements the task. */
+		xTaskDeadlineCreate( prvQueueReceiveTask,			/* The function that implements the task. */
 					"Rx", 							/* The text name assigned to the task - for debug only as it is not used by the kernel. */
 					configMINIMAL_STACK_SIZE, 		/* The size of the stack to allocate to the task. */
 					NULL, 							/* The parameter passed to the task - not used in this simple case. */
 					mainQUEUE_RECEIVE_TASK_PRIORITY,/* The priority assigned to the task. */
-					NULL );							/* The task handle is not required, so NULL is passed. */
+					NULL ,							/* The task handle is not required, so NULL is passed. */
+					A_PERIOD);
 
-		xTaskCreate( prvQueueSendTask, "TX", configMINIMAL_STACK_SIZE, NULL, mainQUEUE_SEND_TASK_PRIORITY, NULL );
+		xTaskDeadlineCreate( prvQueueSendTask, "TX", configMINIMAL_STACK_SIZE, NULL, mainQUEUE_SEND_TASK_PRIORITY, NULL ,B_PERIOD);
 
 		/* Create the software timer, but don't start it yet. */
 		xTimer = xTimerCreate( "Timer",				/* The text name assigned to the software timer - for debug only as it is not used by the kernel. */
@@ -254,6 +268,9 @@ uint32_t ulReceivedValue;
 		{
 			printf( "Unexpected message\r\n" );
 		}
+
+		printf("current task status:%ld,%ld\r\n", ulTaskNumber[0], ulTaskNumber[1]);
+		printf("current task begintime:%u\r\n", ulTaskBeginTime[1]);
 
 		/* Reset the timer if a key has been pressed.  The timer will write
 		mainVALUE_SENT_FROM_TIMER to the queue when it expires. */

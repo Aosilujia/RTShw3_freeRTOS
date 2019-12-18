@@ -69,6 +69,8 @@ If mainCREATE_SIMPLE_BLINKY_DEMO_ONLY is not 1 then the comprehensive test and
 demo application will be built.  The comprehensive test and demo application is
 implemented and described in main_full.c. */
 #define mainCREATE_SIMPLE_BLINKY_DEMO_ONLY	1
+#define mainCREATE_RTOS_HW					1
+
 
 /* This demo uses heap_5.c, and these constants define the sizes of the regions
 that make up the total heap.  heap_5 is only used for test and example purposes
@@ -87,6 +89,12 @@ choice.  See http://www.freertos.org/a00111.html for an explanation. */
  */
 extern void main_blinky( void );
 extern void main_full( void );
+
+/*
+ *the function for our rtos hw
+ *
+*/
+extern void main_hw2( void );
 
 /*
  * Only the comprehensive demo uses application hook (callback) functions.  See
@@ -147,7 +155,11 @@ int main( void )
 
 	/* The mainCREATE_SIMPLE_BLINKY_DEMO_ONLY setting is described at the top
 	of this file. */
-	#if ( mainCREATE_SIMPLE_BLINKY_DEMO_ONLY == 1 )
+	#if ( mainCREATE_RTOS_HW==1)
+	{
+		main_hw2();
+	}
+	#elif ( mainCREATE_SIMPLE_BLINKY_DEMO_ONLY == 1 )
 	{
 		main_blinky();
 	}

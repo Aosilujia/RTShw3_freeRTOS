@@ -1,4 +1,5 @@
 /*
+
  * FreeRTOS Kernel V10.2.1
  * Copyright (C) 2019 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
@@ -62,14 +63,13 @@
 #define configUSE_ALTERNATIVE_API				0
 #define configUSE_QUEUE_SETS					1
 #define configUSE_TASK_NOTIFICATIONS			1
-#define configSUPPORT_STATIC_ALLOCATION			1
+#define configSUPPORT_STATIC_ALLOCATION			0
 
 /*sjtuse-jinxueyi
  *Config for RTS homework2, set EDF scheduler & other schedulers
  */
 /* use EDF scheduler in program*/
 #define configUSE_EDF_SCHEDULER					1
-
 
 /* Software timer related configuration options. */
 #define configUSE_TIMERS						1
@@ -81,7 +81,7 @@
 
 /* Run time stats gathering configuration options. */
 unsigned long ulGetRunTimeCounterValue( void ); /* Prototype of function that returns run time counter. */
-void vConfigureTimerForRunTimeStats( void );	/* Prototype of function that initialises the run time counter. */
+void vConfigureTimerForRunTimeStats(void);	/* Prototype of function that initialises the run time counter. */
 #define configGENERATE_RUN_TIME_STATS			1
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() vConfigureTimerForRunTimeStats()
 #define portGET_RUN_TIME_COUNTER_VALUE() ulGetRunTimeCounterValue()
@@ -95,6 +95,24 @@ format the raw data provided by the uxTaskGetSystemState() function in to human
 readable ASCII form.  See the notes in the implementation of vTaskList() within
 FreeRTOS/Source/tasks.c for limitations. */
 #define configUSE_STATS_FORMATTING_FUNCTIONS	1
+
+/*EDF hw try to define trace recorder
+*/
+
+//#define traceTASK_CURRENT_TIME() printf("TICKTIME:%d",xTaskGetTickCount());
+
+#define configEXPECTED_EDF_TASKS				(5)
+extern unsigned long ulTaskNumber[];
+extern uint32_t ulTaskBeginTime[];
+extern uint32_t ulTaskRunTime[];
+extern char ulTaskname[];
+extern uint32_t ulTaskRunTimeLast;
+#define traceTASK_SWITCHED_IN_PRINT( )	ulTaskNumber[ pxCurrentTCB->uxTCBNumber ] =1;  \
+										ulTaskBeginTime[ pxCurrentTCB->uxTCBNumber ]= ulTaskSwitchedInTime; \
+										strcpy(ulTaskname,pxCurrentTCB->pcTaskName)
+#define traceTASK_SWITCHED_OUT_PRINT( )	ulTaskNumber[ pxCurrentTCB->uxTCBNumber ] =0;  \
+										ulTaskRunTime[ pxCurrentTCB->uxTCBNumber ]=pxCurrentTCB->ulRunTimeCounter;\
+										ulTaskRunTimeLast= pxCurrentTCB->ulRunTimeCounter
 
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function.  In most cases the linker will remove unused

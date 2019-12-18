@@ -335,18 +335,18 @@ is used in assert() statements. */
 							TaskHandle_t * const pxCreatedTask ) PRIVILEGED_FUNCTION;
 #endif
 
-/*EDF xTaskPeriodicCreate
+/*EDF xTaskDeadlineCreate
  *used for creating a task with deadline
 */
 #if( configUSE_EDF_SCHEDULER==1)
-	BaseType_t xTaskPeriodicCreate(TaskFunction_t pxTaskCode,
-		const char * const pcName,	/*lint !e971 Unqualified char types are allowed for strings and single characters only. */
-		const configSTACK_DEPTH_TYPE usStackDepth,
-		void * const pvParameters,
-		UBaseType_t uxPriority,
-		TaskHandle_t * const pxCreatedTask,
-		/*modified for EDF*/
-		TickType_t period) PRIVILEGED_FUNCTION;
+	BaseType_t xTaskDeadlineCreate( TaskFunction_t pxTaskCode,
+							const char * const pcName,	/*lint !e971 Unqualified char types are allowed for strings and single characters only. */
+							const configSTACK_DEPTH_TYPE usStackDepth,
+							void * const pvParameters,
+							UBaseType_t uxPriority,
+							TaskHandle_t * const pxCreatedTask,
+							/*modified for EDF*/
+							TickType_t deadline) PRIVILEGED_FUNCTION;
 #endif
 
 
@@ -2425,6 +2425,16 @@ TaskHandle_t pvTaskIncrementMutexHeldCount( void ) PRIVILEGED_FUNCTION;
  * section.
  */
 void vTaskInternalSetTimeOutState( TimeOut_t * const pxTimeOut ) PRIVILEGED_FUNCTION;
+
+/*
+	EDF
+	try to get task info
+*/
+#define taskGET_CURRENT_TASK_NAME(taskname)	strcpy(name,(pxCurrentTCB)->pcTaskName )
+
+#if (configUSE_EDF_SCHEDULER == 1)
+	unsigned long task_ADD_DEADLINE(void*);
+#endif
 
 
 #ifdef __cplusplus
