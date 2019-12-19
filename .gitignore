@@ -2,4 +2,7 @@ FreeRTOS/WIN32-MSVC/DEBUG/*
 FreeRTOS/WIN32-MSVC/.vs/*
 FreeRTOS/WIN32-MSVC/WIN32.sdf
 FreeRTOS/WIN32-MSVC/WIN32.VC.opendb
+FreeRTOS/WIN32-MSVC/EDF trace.txt
+FreeRTOS/WIN32-MSVC/output.txt
 references/*
+readme.txt

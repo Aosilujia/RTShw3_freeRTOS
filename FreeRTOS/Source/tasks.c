@@ -166,6 +166,7 @@ configIDLE_TASK_NAME in FreeRTOSConfig.h. */
 
 	/*-----------------------------------------------------------*/
 
+
 	#define taskSELECT_HIGHEST_PRIORITY_TASK()														\
 	{																								\
 	UBaseType_t uxTopPriority;																		\
@@ -2085,6 +2086,8 @@ static void prvAddNewTaskToReadyList( TCB_t *pxNewTCB )
 					/* The delayed or ready lists cannot be accessed so the task
 					is held in the pending ready list until the scheduler is
 					unsuspended. */
+
+					/*suspect*/
 					vListInsertEnd( &( xPendingReadyList ), &( pxTCB->xEventListItem ) );
 				}
 			}
@@ -2197,7 +2200,9 @@ BaseType_t xReturn;
 		portCONFIGURE_TIMER_FOR_RUN_TIME_STATS();
 
 		traceTASK_SWITCHED_IN();
+		#if (configUSE_EDF_SCHEDULER ==1 )
 		traceTASK_SWITCHED_IN_PRINT();
+		#endif
 
 		/* Setting up the timer tick is hardware specific and thus in the
 		portable interface. */
@@ -3124,8 +3129,9 @@ void vTaskSwitchContext( void )
 		#endif /* configGENERATE_RUN_TIME_STATS */
 
 		/*EDF print*/
-		traceTASK_SWITCHED_OUT_PRINT();
-
+		#if (configUSE_EDF_SCHEDULER ==1 )
+			traceTASK_SWITCHED_OUT_PRINT();
+		#endif	
 		/* Check for stack overflow, if configured. */
 		taskCHECK_FOR_STACK_OVERFLOW();
 
@@ -3140,7 +3146,13 @@ void vTaskSwitchContext( void )
 		optimised asm code. */
 		taskSELECT_HIGHEST_PRIORITY_TASK(); /*lint !e9079 void * is used as this macro is used with timers and co-routines too.  Alignment is known to be fine as the type of the pointer stored and retrieved is the same. */
 		traceTASK_SWITCHED_IN();
-		traceTASK_SWITCHED_IN_PRINT();
+
+
+		#if (configUSE_EDF_SCHEDULER ==1 )
+			traceTASK_SWITCHED_IN_PRINT();
+		#endif	
+
+		int temp = 1;
 
 		/* After the new task is switched in, update the global errno. */
 		#if( configUSE_POSIX_ERRNO == 1 )

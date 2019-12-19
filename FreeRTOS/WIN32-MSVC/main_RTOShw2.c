@@ -84,6 +84,7 @@
 
 /* Standard includes. */
 #include <stdio.h>
+#include <stdlib.h>
 #include <conio.h>
 
 /* Kernel includes. */
@@ -92,7 +93,11 @@
 #include "timers.h"
 #include "semphr.h"
 
+/*edf hw lzma workload*/
+#include "./LZMA_C/Util/Lzma/LzmaUtil.h"
+
 /* Priorities at which the tasks are created. */
+#define mainWORKLOAD_TASK_PRIORITY			( tskIDLE_PRIORITY + 3 )
 #define mainQUEUE_RECEIVE_TASK_PRIORITY		( tskIDLE_PRIORITY + 2 )
 #define	mainQUEUE_SEND_TASK_PRIORITY		( tskIDLE_PRIORITY + 1 )
 #define mainTEST_TASK_PRIORITY				( tskIDLE_PRIORITY + 1 )
@@ -100,8 +105,8 @@
 
 /* The rate at which data is sent to the queue.  The times are converted from
 milliseconds to ticks using the pdMS_TO_TICKS() macro. */
-#define mainTASK_SEND_FREQUENCY_MS			pdMS_TO_TICKS( 200UL )
-#define mainTIMER_SEND_FREQUENCY_MS			pdMS_TO_TICKS( 2000UL )
+//#define mainTASK_SEND_FREQUENCY_MS			pdMS_TO_TICKS( 200UL )
+//#define mainTIMER_SEND_FREQUENCY_MS			pdMS_TO_TICKS( 2000UL )
 
 /* The number of items the queue can hold at once. */
 #define mainQUEUE_LENGTH					( 2 )
@@ -125,7 +130,12 @@ EDF TEST tasks
 */
 static void TaskA( void *pvParameters );
 static void TaskB( void *pvParameters );
-static void TaskC(void *pvParameters);
+static void TaskC( void *pvParameters);
+//main workload task
+static void TaskX(void *pvParameters);
+
+static void TaskSend(void *pvParameters);
+static void TaskReceive(void *pvParameters);
 
 static void T1(void *);
 static void T2(void *);
@@ -148,15 +158,21 @@ static TimerHandle_t xTimer = NULL;
 
 /*EDF parameters*/
 /*deadlines*/
-#define A_DDL 50
-#define B_DDL 20
-#define C_DDL 10
+#define WORKLOAD_DDL 500
+#define A_DDL 300
+#define B_DDL 250
+#define C_DDL 200
+#define SEND_DDL 150
 
 /* arriving periods */
-#define mainTASK_A_FREQUENCY_MS			pdMS_TO_TICKS( 500UL )
-#define mainTASK_B_FREQUENCY_MS			pdMS_TO_TICKS( 1000UL )
-#define mainTASK_C_FREQUENCY_MS			pdMS_TO_TICKS( 500UL )
+#define mainTASK_WORKLOAD_FREQUENCY_MS  pdMS_TO_TICKS( 500UL )
 
+#define mainTASK_DELAY_FREQUENCY		pdMS_TO_TICKS( 50UL )
+
+#define mainTASK_A_FREQUENCY_MS			pdMS_TO_TICKS( 1000UL )
+#define mainTASK_B_FREQUENCY_MS			pdMS_TO_TICKS( 2000UL )
+#define mainTASK_C_FREQUENCY_MS			pdMS_TO_TICKS( 1000UL )
+#define mainTASK_SEND_FREQUENCY_MS		pdMS_TO_TICKS( 3000UL )
 
 /*EDF datastruct for current state 
  *!!!!!warning!!!!!
@@ -166,28 +182,38 @@ char ulTaskname[20];
 uint32_t ulTaskRunTimeLast=0;
 unsigned long ulTaskNumber[configEXPECTED_EDF_TASKS];
 uint32_t ulTaskBeginTime[configEXPECTED_EDF_TASKS];
+uint32_t ulTaskBeginTick;
 uint32_t ulTaskRunTime[configEXPECTED_EDF_TASKS];
 TickType_t ulTaskDDL;
 
 /*** SEE THE COMMENTS AT THE TOP OF THIS FILE ***/
 void main_hw2( void )
 {
+	xQueue = xQueueCreate(mainQUEUE_LENGTH, sizeof(uint32_t));
 
-	if (1==1);
+	if (xQueue != NULL)
 	{
 		/* Start the two tasks as described in the comments at the top of this
 		file. */
+
+		xTaskDeadlineCreate(TaskX, "TaskX", configMINIMAL_STACK_SIZE, NULL, mainWORKLOAD_TASK_PRIORITY, NULL, WORKLOAD_DDL);
+
+
 		xTaskDeadlineCreate( TaskA,			/* The function that implements the task. */
-					"TA", 							/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+					"TaskA", 							/* The text name assigned to the task - for debug only as it is not used by the kernel. */
 					configMINIMAL_STACK_SIZE, 		/* The size of the stack to allocate to the task. */
 					NULL, 							/* The parameter passed to the task - not used in this simple case. */
 					mainTEST_TASK_PRIORITY,/* The priority assigned to the task. */
 					NULL ,							/* The task handle is not required, so NULL is passed. */
 					A_DDL);
 
-		xTaskDeadlineCreate( TaskB, "TB", configMINIMAL_STACK_SIZE, NULL, mainTEST_TASK_PRIORITY, NULL ,B_DDL);
+		xTaskDeadlineCreate( TaskB, "TaskB", configMINIMAL_STACK_SIZE, NULL, mainTEST_TASK_PRIORITY, NULL ,B_DDL);
 
-		xTaskDeadlineCreate( TaskC, "TC", configMINIMAL_STACK_SIZE, NULL, mainTEST_TASK_PRIORITY, NULL, C_DDL);
+		xTaskDeadlineCreate( TaskC, "TaskC", configMINIMAL_STACK_SIZE, NULL, mainTEST_TASK_PRIORITY, NULL, C_DDL);
+
+		xTaskDeadlineCreate( TaskSend, "TSend", configMINIMAL_STACK_SIZE, NULL, mainQUEUE_SEND_TASK_PRIORITY, NULL, SEND_DDL);
+
+		xTaskCreate(TaskReceive, "TRece", configMINIMAL_STACK_SIZE, NULL, mainQUEUE_RECEIVE_TASK_PRIORITY, NULL);
 
 		/* Start the tasks and timer running. */
 		vTaskStartScheduler();
@@ -201,6 +227,60 @@ void main_hw2( void )
 	for( ;; );
 }
 /*-----------------------------------------------------------*/
+static void WorkloadTask() {
+	int numArgs = 4;
+	char ** args = (char**)malloc(4 * sizeof(char*));
+	char rs[800] = { 0 };
+	char arg00[] = "e";
+	char arg0[] = "trace.dump";
+	char arg1[] = "output.txt";
+	//char **args = new char *[numArgs + 1];
+	args[1] = arg00;
+	args[2] = arg0;
+	args[3] = arg1;
+	int res = main2(numArgs, args, rs);
+	//fputs(rs, stdout);
+	return;
+}
+
+
+static void TaskX(void *pvParameters) {
+	TickType_t xNextWakeTime;
+	const TickType_t xBlockTime = mainTASK_WORKLOAD_FREQUENCY_MS;
+
+	/* Prevent the compiler warning about the unused parameter. */
+	(void)pvParameters;
+
+	/* Initialise xNextWakeTime - this only needs to be done once. */
+	xNextWakeTime = xTaskGetTickCount();
+
+	double workload = 2.0;
+
+
+
+	for (;; )
+	{
+		/* Place this task in the blocked state until it is time to run again.
+		The block time is specified in ticks, pdMS_TO_TICKS() was used to
+		convert a time specified in milliseconds into a time specified in ticks.
+		While in the Blocked state this task will not consume any CPU time. */
+		vTaskDelayUntil(&xNextWakeTime, xBlockTime);
+
+		/*test workload*/
+		WorkloadTask();
+
+		/*working block*/
+		//printf("current task status:%ld,%ld\r\n", ulTaskNumber[1], ulTaskNumber[2]);
+		//printf("running ticktimes:%u,%u,%u,%u\r\n", ulTaskRunTime[0], ulTaskRunTime[1], ulTaskRunTime[2], ulTaskRunTime[3] );
+		printf("T:%6s\r\n", ulTaskname);
+		//printf("current task begintime:%u\r\n", ulTaskBeginTime[2]);
+		printf("BEGIN:%u\r\n", ulTaskBeginTick);
+		printf("DDL:%u\r\n", ulTaskDDL);
+	}
+}
+
+
+
 static void TaskA(void *pvParameters) {
 	TickType_t xNextWakeTime;
 	const TickType_t xBlockTime = mainTASK_A_FREQUENCY_MS;
@@ -210,6 +290,8 @@ static void TaskA(void *pvParameters) {
 
 	/* Initialise xNextWakeTime - this only needs to be done once. */
 	xNextWakeTime = xTaskGetTickCount();
+
+	vTaskDelayUntil(&xNextWakeTime, mainTASK_DELAY_FREQUENCY);
 
 	double workload = 2.0;
 
@@ -221,8 +303,20 @@ static void TaskA(void *pvParameters) {
 		While in the Blocked state this task will not consume any CPU time. */
 		vTaskDelayUntil(&xNextWakeTime, xBlockTime);
 
+		printf("T:%6s\r\n", ulTaskname);
+		//printf("current task begintime:%u\r\n", ulTaskBeginTime[1]);
+		printf("BEGIN:%u\r\n", ulTaskBeginTick);
+		printf("DDL:%u\r\n", ulTaskDDL);
+
+
 		/*test workload*/
-		for (int i = 0;i < 99999;i += 1) {
+		for (int i = 0;i < 8990000;i += 1) {
+			workload += 1.0;
+			workload /= i;
+			workload += 2.0;
+			workload /= i;
+			workload += 3.0;
+			workload /= i;
 			workload += 1.0;
 			workload /= i;
 			workload += 2.0;
@@ -232,11 +326,9 @@ static void TaskA(void *pvParameters) {
 		}
 
 		/*working block*/
-		printf("current task status:%ld,%ld,%ld\r\n", ulTaskNumber[1], ulTaskNumber[2],ulTaskNumber[3]);
+		//printf("current task status:%ld,%ld,%ld\r\n", ulTaskNumber[1], ulTaskNumber[2],ulTaskNumber[3]);
 		//printf("running ticktimes:%u,%u,%u,%u\r\n", ulTaskRunTime[0], ulTaskRunTime[1], ulTaskRunTime[2], ulTaskRunTime[3]);
-		printf("current running task:%6s\r\n", ulTaskname);
-		printf("current task begintime:%u\r\n", ulTaskBeginTime[1]);
-		printf("current task ddl:%u\r\n", ulTaskDDL);
+
 
 	}
 }
@@ -250,6 +342,9 @@ static void TaskB(void *pvParameters) {
 
 	/* Initialise xNextWakeTime - this only needs to be done once. */
 	xNextWakeTime = xTaskGetTickCount();
+	vTaskDelayUntil(&xNextWakeTime, mainTASK_DELAY_FREQUENCY);
+
+	double workload = 2.0;
 
 	for (;; )
 	{
@@ -258,13 +353,30 @@ static void TaskB(void *pvParameters) {
 		convert a time specified in milliseconds into a time specified in ticks.
 		While in the Blocked state this task will not consume any CPU time. */
 		vTaskDelayUntil(&xNextWakeTime, xBlockTime);
+		printf("T:%6s\r\n", ulTaskname);
+		printf("BEGIN:%u\r\n", ulTaskBeginTick);
+		printf("DDL:%u\r\n", ulTaskDDL);
+
+
+		/*test workload*/
+		for (int i = 0;i < 9999999;i += 1) {
+			workload += 1.0;
+			workload /= i;
+			workload += 2.0;
+			workload /= i;
+			workload += 3.0;
+			workload /= i;
+			workload += 1.0;
+			workload /= i;
+			workload += 2.0;
+			workload /= i;
+			workload += 3.0;
+			workload /= i;
+		}
 
 		/*working block*/
 		//printf("current task status:%ld,%ld\r\n", ulTaskNumber[1], ulTaskNumber[2]);
 		//printf("running ticktimes:%u,%u,%u,%u\r\n", ulTaskRunTime[0], ulTaskRunTime[1], ulTaskRunTime[2], ulTaskRunTime[3] );
-		printf("current running task:%6s\r\n", ulTaskname);
-		printf("current task begintime:%u\r\n", ulTaskBeginTime[2]);
-		printf("current task ddl:%u\r\n", ulTaskDDL);
 	}
 }
 
@@ -278,6 +390,7 @@ static void TaskC(void *pvParameters) {
 
 	/* Initialise xNextWakeTime - this only needs to be done once. */
 	xNextWakeTime = xTaskGetTickCount();
+	vTaskDelayUntil(&xNextWakeTime, mainTASK_DELAY_FREQUENCY);
 
 	double workload = 3.0;
 
@@ -289,8 +402,19 @@ static void TaskC(void *pvParameters) {
 		While in the Blocked state this task will not consume any CPU time. */
 		vTaskDelayUntil(&xNextWakeTime, xBlockTime);
 
-		/*working block*/
-		for (int i = 0;i < 99999;i += 1) {
+		printf("T:%6s\r\n", ulTaskname);
+		printf("BEGIN:%u\r\n", ulTaskBeginTick);
+		printf("DDL:%u\r\n", ulTaskDDL);
+
+
+		/*test workload*/
+		for (int i = 0;i < 9999999;i += 1) {
+			workload += 1.0;
+			workload /= i;
+			workload += 2.0;
+			workload /= i;
+			workload += 3.0;
+			workload /= i;
 			workload += 1.0;
 			workload /= i;
 			workload += 2.0;
@@ -299,18 +423,100 @@ static void TaskC(void *pvParameters) {
 			workload /= i;
 		}
 
-
 		//printf("current task status:%ld,%ld\r\n", ulTaskNumber[1], ulTaskNumber[2]);
 		//printf("running ticktimes:%u,%u,%u,%u\r\n", ulTaskRunTime[0], ulTaskRunTime[1], ulTaskRunTime[2], ulTaskRunTime[3]);
-		printf("current running task:%6s\r\n", ulTaskname);
-		printf("current task begintime:%u\r\n", ulTaskBeginTime[3]);
-		printf("current task ddl:%u\r\n", ulTaskDDL);
+	}
+}
+
+/*-----------------------------------------------------------*/
+/*queue send receive tasks */
+static void TaskSend(void *pvParameters)
+{
+	TickType_t xNextWakeTime;
+	const TickType_t xBlockTime = mainTASK_SEND_FREQUENCY_MS;
+	const uint32_t ulValueToSend = mainVALUE_SENT_FROM_TASK;
+
+	/* Prevent the compiler warning about the unused parameter. */
+	(void)pvParameters;
+
+	/* Initialise xNextWakeTime - this only needs to be done once. */
+	xNextWakeTime = xTaskGetTickCount();
+	vTaskDelayUntil(&xNextWakeTime, mainTASK_DELAY_FREQUENCY);
+
+	for (;; )
+	{
+		/* Place this task in the blocked state until it is time to run again.
+		The block time is specified in ticks, pdMS_TO_TICKS() was used to
+		convert a time specified in milliseconds into a time specified in ticks.
+		While in the Blocked state this task will not consume any CPU time. */
+		vTaskDelayUntil(&xNextWakeTime, xBlockTime);
+
+
+		printf("T:%6s\r\n", ulTaskname);
+		//printf("current task begintime:%u\r\n", ulTaskBeginTime[3]);
+		printf("BEGIN:%u\r\n", ulTaskBeginTick);
+		printf("DDL:%u\r\n", ulTaskDDL);
+
+		/* Send to the queue - causing the queue receive task to unblock and
+		write to the console.  0 is used as the block time so the send operation
+		will not block - it shouldn't need to block as the queue should always
+		have at least one space at this point in the code. */
+		xQueueSend(xQueue, &ulValueToSend, 0U);
+
+	}
+}
+static void TaskReceive(void *pvParameters)
+{
+	uint32_t ulReceivedValue;
+
+	/* Prevent the compiler warning about the unused parameter. */
+	(void)pvParameters;
+
+	for (;; )
+	{
+		/* Wait until something arrives in the queue - this task will block
+		indefinitely provided INCLUDE_vTaskSuspend is set to 1 in
+		FreeRTOSConfig.h.  It will not use any CPU time while it is in the
+		Blocked state. */
+		xQueueReceive(xQueue, &ulReceivedValue, portMAX_DELAY);
+
+		printf("T:%6s\r\n", ulTaskname);
+		//printf("current task begintime:%u\r\n", ulTaskBeginTime[3]);
+		printf("BEGIN:%u\r\n", ulTaskBeginTick);
+		printf("DDL:%u\r\n", ulTaskDDL);
+
+
+		/*  To get here something must have been received from the queue, but
+		is it an expected value?  Normally calling printf() from a task is not
+		a good idea.  Here there is lots of stack space and only one task is
+		using console IO so it is ok.  However, note the comments at the top of
+		this file about the risks of making Windows system calls (such as
+		console output) from a FreeRTOS task. */
+		if (ulReceivedValue == mainVALUE_SENT_FROM_TASK)
+		{
+			int i = 1;
+			//printf("Message received from task\r\n");
+		}
+		else if (ulReceivedValue == mainVALUE_SENT_FROM_TIMER)
+		{
+			printf("Message received from software timer\r\n");
+		}
+		else
+		{
+			printf("Unexpected message\r\n");
+		}
+
 	}
 }
 
 
 /*-----------------------------------------------------------*/
 
+
+
+
+/*-----------------------------------------------------------*/
+/*demo task*/
 static void T1(void *pvParameters)
 {
 	unsigned int i = 0;

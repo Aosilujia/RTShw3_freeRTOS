@@ -101,15 +101,17 @@ FreeRTOS/Source/tasks.c for limitations. */
 
 //#define traceTASK_CURRENT_TIME() printf("TICKTIME:%d",xTaskGetTickCount());
 
-#define configEXPECTED_EDF_TASKS				(5)
+#define configEXPECTED_EDF_TASKS				(10)
 extern unsigned long ulTaskNumber[];
 extern uint32_t ulTaskBeginTime[];
 extern uint32_t ulTaskRunTime[];
+extern uint32_t ulTaskBeginTick;
 extern char ulTaskname[];
 extern uint32_t ulTaskDDL;
 extern uint32_t ulTaskRunTimeLast;
 #define traceTASK_SWITCHED_IN_PRINT( )	ulTaskNumber[ pxCurrentTCB->uxTCBNumber ] =1;  \
-										ulTaskBeginTime[ pxCurrentTCB->uxTCBNumber ]= ulTaskSwitchedInTime; \
+										ulTaskBeginTime[ pxCurrentTCB->uxTCBNumber ]= ulTaskSwitchedInTime ;	\
+										ulTaskBeginTick = xTickCount;		\
 										ulTaskDDL=pxCurrentTCB->ulAbsDeadline;\
 										strcpy(ulTaskname,pxCurrentTCB->pcTaskName)
 #define traceTASK_SWITCHED_OUT_PRINT( )	ulTaskNumber[ pxCurrentTCB->uxTCBNumber ] =0;  \

@@ -37,6 +37,12 @@
     <Filter Include="Demo App Source\FreeRTOS+Trace Recorder">
       <UniqueIdentifier>{e9143e93-15dd-4364-aa42-e1b4a09bff07}</UniqueIdentifier>
     </Filter>
+    <Filter Include="LZMA">
+      <UniqueIdentifier>{66d7b1ec-93e9-4691-b468-3d3a52db2e5b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="LZMA\utils">
+      <UniqueIdentifier>{81d89eaf-8982-4de4-8b5c-dfd38659b935}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.c">
@@ -162,6 +168,135 @@
     <ClCompile Include="main_RTOShw2.c">
       <Filter>Demo App Source</Filter>
     </ClCompile>
+    <ClCompile Include="LZMA_C\7zAlloc.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\7zArcIn.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\7zBuf.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\7zBuf2.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\7zCrc.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\7zCrcOpt.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\7zDec.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\7zFile.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\7zStream.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\Aes.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\AesOpt.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\Alloc.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\Bcj2.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\Bcj2Enc.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\Bra.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\Bra86.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\BraIA64.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\CpuArch.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\Delta.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\DllSecur.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\LzFind.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\LzFindMt.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\Lzma2Dec.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\Lzma2Enc.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\Lzma86Dec.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\Lzma86Enc.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\LzmaDec.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\LzmaEnc.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\LzmaLib.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\MtCoder.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\Ppmd7.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\Ppmd7Dec.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\Ppmd7Enc.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\Sha256.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\Sort.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\Threads.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\Xz.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\XzCrc64.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\XzCrc64Opt.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\XzDec.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\XzEnc.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\XzIn.c">
+      <Filter>LZMA</Filter>
+    </ClCompile>
+    <ClCompile Include="LZMA_C\Util\Lzma\LzmaUtil.c">
+      <Filter>LZMA\utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FreeRTOSConfig.h">
@@ -221,11 +356,124 @@
     <ClInclude Include="..\Source\include\timers.h">
       <Filter>FreeRTOS Source\Include</Filter>
     </ClInclude>
+    <ClInclude Include="LZMA_C\7z.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\7zAlloc.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\7zBuf.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\7zCrc.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\7zFile.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\7zTypes.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\7zVersion.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\Aes.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\Alloc.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\Bcj2.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\Bra.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\Compiler.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\CpuArch.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\Delta.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\DllSecur.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\LzFind.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\LzFindMt.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\LzHash.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\Lzma2Dec.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\Lzma2Enc.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\Lzma86.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\LzmaDec.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\LzmaEnc.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\LzmaLib.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\MtCoder.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\Ppmd.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\Ppmd7.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\Precomp.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\RotateDefs.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\Sha256.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\Sort.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\Threads.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\Xz.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\XzCrc64.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\XzEnc.h">
+      <Filter>LZMA</Filter>
+    </ClInclude>
+    <ClInclude Include="LZMA_C\Util\Lzma\LzmaUtil.h">
+      <Filter>LZMA\utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="Trace.dump">
       <Filter>Demo App Source</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="LZMA_C\7zVersion.rc">
+      <Filter>LZMA</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>
