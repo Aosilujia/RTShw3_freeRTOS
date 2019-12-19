@@ -70,6 +70,7 @@
  */
 /* use EDF scheduler in program*/
 #define configUSE_EDF_SCHEDULER					1
+#define configUSE_TIME_SLICING					0
 
 /* Software timer related configuration options. */
 #define configUSE_TIMERS						1
@@ -109,14 +110,25 @@ extern uint32_t ulTaskBeginTick;
 extern char ulTaskname[];
 extern uint32_t ulTaskDDL;
 extern uint32_t ulTaskRunTimeLast;
+char trace[100000];
+static int tempoffset = 0;
+#if (configUSE_EDF_SCHEDULER==1)
 #define traceTASK_SWITCHED_IN_PRINT( )	ulTaskNumber[ pxCurrentTCB->uxTCBNumber ] =1;  \
 										ulTaskBeginTime[ pxCurrentTCB->uxTCBNumber ]= ulTaskSwitchedInTime ;	\
 										ulTaskBeginTick = xTickCount;		\
 										ulTaskDDL=pxCurrentTCB->ulAbsDeadline;\
-										strcpy(ulTaskname,pxCurrentTCB->pcTaskName)
+										strcpy(ulTaskname,pxCurrentTCB->pcTaskName);\
+										strcpy(trace+tempoffset,pxCurrentTCB->pcTaskName);	\
+										tempoffset+=4;
 #define traceTASK_SWITCHED_OUT_PRINT( )	ulTaskNumber[ pxCurrentTCB->uxTCBNumber ] =0;  \
 										ulTaskRunTime[ pxCurrentTCB->uxTCBNumber ]=pxCurrentTCB->ulRunTimeCounter;\
 										ulTaskRunTimeLast= pxCurrentTCB->ulRunTimeCounter
+#else
+#define traceTASK_SWITCHED_IN_PRINT()	ulTaskBeginTick = xTickCount;		\
+										strcpy(ulTaskname,pxCurrentTCB->pcTaskName)
+#endif
+
+
 
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function.  In most cases the linker will remove unused

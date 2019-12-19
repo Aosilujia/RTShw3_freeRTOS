@@ -338,7 +338,6 @@ is used in assert() statements. */
 /*EDF xTaskDeadlineCreate
  *used for creating a task with deadline
 */
-#if( configUSE_EDF_SCHEDULER==1)
 	BaseType_t xTaskDeadlineCreate( TaskFunction_t pxTaskCode,
 							const char * const pcName,	/*lint !e971 Unqualified char types are allowed for strings and single characters only. */
 							const configSTACK_DEPTH_TYPE usStackDepth,
@@ -347,7 +346,6 @@ is used in assert() statements. */
 							TaskHandle_t * const pxCreatedTask,
 							/*modified for EDF*/
 							TickType_t deadline) PRIVILEGED_FUNCTION;
-#endif
 
 
 /**

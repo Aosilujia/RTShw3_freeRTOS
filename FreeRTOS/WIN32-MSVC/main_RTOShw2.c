@@ -97,7 +97,7 @@
 #include "./LZMA_C/Util/Lzma/LzmaUtil.h"
 
 /* Priorities at which the tasks are created. */
-#define mainWORKLOAD_TASK_PRIORITY			( tskIDLE_PRIORITY + 3 )
+#define mainWORKLOAD_TASK_PRIORITY			( tskIDLE_PRIORITY + 1 )
 #define mainQUEUE_RECEIVE_TASK_PRIORITY		( tskIDLE_PRIORITY + 2 )
 #define	mainQUEUE_SEND_TASK_PRIORITY		( tskIDLE_PRIORITY + 1 )
 #define mainTEST_TASK_PRIORITY				( tskIDLE_PRIORITY + 1 )
@@ -196,8 +196,6 @@ void main_hw2( void )
 		/* Start the two tasks as described in the comments at the top of this
 		file. */
 
-		xTaskDeadlineCreate(TaskX, "TaskX", configMINIMAL_STACK_SIZE, NULL, mainWORKLOAD_TASK_PRIORITY, NULL, WORKLOAD_DDL);
-
 
 		xTaskDeadlineCreate( TaskA,			/* The function that implements the task. */
 					"TaskA", 							/* The text name assigned to the task - for debug only as it is not used by the kernel. */
@@ -214,6 +212,10 @@ void main_hw2( void )
 		xTaskDeadlineCreate( TaskSend, "TSend", configMINIMAL_STACK_SIZE, NULL, mainQUEUE_SEND_TASK_PRIORITY, NULL, SEND_DDL);
 
 		xTaskCreate(TaskReceive, "TRece", configMINIMAL_STACK_SIZE, NULL, mainQUEUE_RECEIVE_TASK_PRIORITY, NULL);
+
+		xTaskDeadlineCreate(TaskX, "TaskX", configMINIMAL_STACK_SIZE, NULL, mainWORKLOAD_TASK_PRIORITY, NULL, WORKLOAD_DDL);
+
+
 
 		/* Start the tasks and timer running. */
 		vTaskStartScheduler();
@@ -232,7 +234,7 @@ static void WorkloadTask() {
 	char ** args = (char**)malloc(4 * sizeof(char*));
 	char rs[800] = { 0 };
 	char arg00[] = "e";
-	char arg0[] = "trace.dump";
+	char arg0[] = "test.txt";
 	char arg1[] = "output.txt";
 	//char **args = new char *[numArgs + 1];
 	args[1] = arg00;
@@ -265,6 +267,10 @@ static void TaskX(void *pvParameters) {
 		convert a time specified in milliseconds into a time specified in ticks.
 		While in the Blocked state this task will not consume any CPU time. */
 		vTaskDelayUntil(&xNextWakeTime, xBlockTime);
+		printf("T:%6s\r\n", ulTaskname);
+		//printf("current task begintime:%u\r\n", ulTaskBeginTime[2]);
+		printf("BEGIN:%u\r\n", ulTaskBeginTick);
+		printf("DDL:%u\r\n", ulTaskDDL);
 
 		/*test workload*/
 		WorkloadTask();
@@ -272,10 +278,7 @@ static void TaskX(void *pvParameters) {
 		/*working block*/
 		//printf("current task status:%ld,%ld\r\n", ulTaskNumber[1], ulTaskNumber[2]);
 		//printf("running ticktimes:%u,%u,%u,%u\r\n", ulTaskRunTime[0], ulTaskRunTime[1], ulTaskRunTime[2], ulTaskRunTime[3] );
-		printf("T:%6s\r\n", ulTaskname);
-		//printf("current task begintime:%u\r\n", ulTaskBeginTime[2]);
-		printf("BEGIN:%u\r\n", ulTaskBeginTick);
-		printf("DDL:%u\r\n", ulTaskDDL);
+
 	}
 }
 
@@ -359,7 +362,7 @@ static void TaskB(void *pvParameters) {
 
 
 		/*test workload*/
-		for (int i = 0;i < 9999999;i += 1) {
+		for (int i = 0;i < 999999;i += 1) {
 			workload += 1.0;
 			workload /= i;
 			workload += 2.0;
@@ -484,6 +487,8 @@ static void TaskReceive(void *pvParameters)
 		//printf("current task begintime:%u\r\n", ulTaskBeginTime[3]);
 		printf("BEGIN:%u\r\n", ulTaskBeginTick);
 		printf("DDL:%u\r\n", ulTaskDDL);
+
+		//printf("%s\n",trace);
 
 
 		/*  To get here something must have been received from the queue, but

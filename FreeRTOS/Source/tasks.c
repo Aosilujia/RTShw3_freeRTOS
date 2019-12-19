@@ -856,7 +856,7 @@ static void prvAddNewTaskToReadyList( TCB_t *pxNewTCB ) PRIVILEGED_FUNCTION;
 *used for creating a task with deadline
 */
 
-#if( configUSE_EDF_SCHEDULER==1)
+
 	BaseType_t xTaskDeadlineCreate(TaskFunction_t pxTaskCode,
 		const char * const pcName,	/*lint !e971 Unqualified char types are allowed for strings and single characters only. */
 		const configSTACK_DEPTH_TYPE usStackDepth,
@@ -868,6 +868,11 @@ static void prvAddNewTaskToReadyList( TCB_t *pxNewTCB ) PRIVILEGED_FUNCTION;
 	{
 		TCB_t *pxNewTCB;
 		BaseType_t xReturn;
+
+		#if( configUSE_EDF_SCHEDULER==0)
+		return xTaskCreate(pxTaskCode, pcName, usStackDepth, pvParameters, uxPriority, pxCreatedTask);
+		#endif
+
 
 		/* If the stack grows down then allocate the stack then the TCB so the stack
 		does not grow into the TCB.  Likewise if the stack grows up then allocate
@@ -940,7 +945,9 @@ static void prvAddNewTaskToReadyList( TCB_t *pxNewTCB ) PRIVILEGED_FUNCTION;
 			/*EDF modification
 			 set task deadline to the parameter
 			*/
-			pxNewTCB->ulDeadline = deadline;
+			#if configUSE_EDF_SCHEDULER==1
+				pxNewTCB->ulDeadline = deadline;
+			#endif		
 			/**/
 			prvAddNewTaskToReadyList(pxNewTCB);
 			xReturn = pdPASS;
@@ -952,7 +959,6 @@ static void prvAddNewTaskToReadyList( TCB_t *pxNewTCB ) PRIVILEGED_FUNCTION;
 
 		return xReturn;
 	}
-#endif
 
 
 static void prvInitialiseNewTask( 	TaskFunction_t pxTaskCode,
@@ -2200,9 +2206,7 @@ BaseType_t xReturn;
 		portCONFIGURE_TIMER_FOR_RUN_TIME_STATS();
 
 		traceTASK_SWITCHED_IN();
-		#if (configUSE_EDF_SCHEDULER ==1 )
 		traceTASK_SWITCHED_IN_PRINT();
-		#endif
 
 		/* Setting up the timer tick is hardware specific and thus in the
 		portable interface. */
@@ -3148,9 +3152,7 @@ void vTaskSwitchContext( void )
 		traceTASK_SWITCHED_IN();
 
 
-		#if (configUSE_EDF_SCHEDULER ==1 )
-			traceTASK_SWITCHED_IN_PRINT();
-		#endif	
+		traceTASK_SWITCHED_IN_PRINT();
 
 		int temp = 1;
 
